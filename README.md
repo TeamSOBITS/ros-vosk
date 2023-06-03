@@ -13,7 +13,7 @@ git clone https://github.com/TeamSOBITS/ros-vosk
 # git clone https://github.com/TeamSOBITS/speech_recognition_vosk
 ```
 
-1. Install Dependencies
+2. Install Dependencies
 
 ```bash
 cd ros-vosk/
@@ -36,7 +36,7 @@ python3 -m pip install \
     lxml
 ```
 
-1. Don't forget to run `catkin_make`
+3. Don't forget to run `catkin_make`
 ```bash
 cm
 
@@ -60,9 +60,9 @@ cat ~/catkin_ws/src/ros_vosk/cfg/params.yaml
 > Remember that you can use any language model from the [list of models compatible with Vosk-API](https://alphacephei.com/vosk/models).
 
 > **Note**
-> The model should download automatically if it exists in the database.
+> The model should be downloaded automatically if it exists in the database.
 
-1. Launch the node
+2. Launch the node
 
 ```bash
 # Launch the speech recognition node
@@ -77,18 +77,18 @@ rosrun ros_vosk vosk_node.py
 ## Interface
 
 ### Publishing Topics
-* speech_recognition/vosk_result    -> vosk_node.py publishes a custom "speech_recognition" message
-* speech_recognition/final_result   -> vosk_node.py publishes a simple string with the final result
-* speech_recognition/partial_result -> vosk_node.py publishes a simple string with the partial result
-* tts/status -> tts_engine.py publishes the state of the engine. True if it is speaking False if it is not. If the status is true vosk_node won't process the audio stream so it won't listen to itself 
-* tts/phrase -> tts_engine.py subscribes to this topic in order to speak the given string. Name your desire and it shall be heard by all in the room..
+- speech_recognition/vosk_result    -> vosk_node.py publishes a custom "speech_recognition" message
+- speech_recognition/final_result   -> vosk_node.py publishes a simple string with the final result
+- speech_recognition/partial_result -> vosk_node.py publishes a simple string with the partial result
+- tts/status -> tts_engine.py publishes the state of the engine. True if it is speaking False if it is not. If the status is true vosk_node won't process the audio stream so it won't listen to itself 
+- tts/phrase -> tts_engine.py subscribes to this topic in order to speak the given string. Name your desire and it shall be heard by all in the room..
 
 ## Main Authors
-Angelo Antikatzidis <an.antikatzidis@gmail.com>
-Nickolay V. Shmyrev <nshmyrev@gmail.com>
+- Angelo Antikatzidis <an.antikatzidis@gmail.com>
+- Nickolay V. Shmyrev <nshmyrev@gmail.com>
 
-## Mainteiners
-Valentin Keith
-Okuma Yuki
-Yamada Ren
-Ono Fumiya
+## Maintainers
+- Valentin Keith
+- Okuma Yuki
+- Yamada Ren
+- Ono Fumiya
