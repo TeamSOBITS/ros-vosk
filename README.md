@@ -9,14 +9,14 @@ A ROS package for speech-to-text services based on [Vosk](https://github.com/alp
 
 ```bash
 cd ~/catkin_ws/src/
-git clone https://github.com/TeamSOBITS/ros-vosk
+git clone https://github.com/TeamSOBITS/ros_vosk
 # git clone https://github.com/TeamSOBITS/speech_recognition_vosk
 ```
 
 2. Install Dependencies
 
 ```bash
-cd ros-vosk/
+cd ros_vosk/
 # cd speech_recognition_vosk/
 bash install.sh
 
