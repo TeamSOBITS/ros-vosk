@@ -44,9 +44,17 @@ class vosk_sr():
         model_path = os.path.join(models_dir, model_name)
         
         if not os.path.exists(model_path):
-            print (f"model '{model_name}' not found in '{models_dir}'! Please use the GUI to download it or configure an available model...")
             model_downloader = downloader.model_downloader()
-            model_downloader.execute()
+            model_link, _ = model_downloader.get_model_link(model_name)
+            # rospy.loginfo("model link: %s", model_link)
+
+            if model_link == None:
+                print (f"model '{model_name}' not found in '{models_dir}'! Please use the GUI to download it or configure an available model...")
+                model_downloader.execute()
+            else:
+                print (f"model '{model_name}' not found in '{models_dir}'! Downloading model...")
+                model_downloader.download(model_name)
+                
             model_name = model_downloader.model_to_download
         
         if not rospy.has_param('vosk/model'):
