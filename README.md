@@ -45,7 +45,7 @@ cd ~/catkin_ws/ && catkin_make
 ```
 
 > **Warning**
-> Sometimes the new generated msg might is not recognized and `import error` might appear. In such case, you will need to open a new terminal or restart your container (if you are using Docker).
+> Sometimes the new generated msg might not be recognized and `import error` might appear. In such case, you will need to open a new terminal or restart your container (if you are using Docker).
 
 
 ## Launch
