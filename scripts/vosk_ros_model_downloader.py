@@ -259,6 +259,7 @@ class model_downloader():
                     file_name = model_link.split(self.url+'/', 1)
                     file_name = file_name[1]
                     return model_link, file_name
+        return None, None
 
     def on_combo_model_select(self, event):
         self.model_to_download = self.combo_models.get()
