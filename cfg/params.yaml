@@ -1,7 +1,7 @@
-# vosk/model: vosk-model-small-en-us-0.15 # Lightweight wideband model for US English
-vosk/model: vosk-model-en-us-0.22 # Big model for US English
-# vosk/model: vosk-model-small-ja-0.22 # Lightweight wideband model for Japanese
-# vosk/model: vosk-model-ja-0.22 # Big model for Japanese
-# vosk/model: vosk-model-spk-0.4 # Model for speaker language identification
+vosk/model: vosk-model-small-en-us-0.15 # Lightweight wideband model for US English
+# vosk/model: vosk-model-en-us-0.22       # Big model for US English
+# vosk/model: vosk-model-small-ja-0.22    # Lightweight wideband model for Japanese
+# vosk/model: vosk-model-ja-0.22          # Big model for Japanese
+# vosk/model: vosk-model-spk-0.4          # Model for speaker language identification
 vosk/sample_rate: 16000
 vosk/blocksize: 16000
