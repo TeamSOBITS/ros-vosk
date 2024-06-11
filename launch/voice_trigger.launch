@@ -1,0 +1,16 @@
+<launch>
+
+    <node name="vosk_engine"   pkg="ros_vosk" type="vosk_node.py"  output="screen" />
+    <node name="voice_trigger" pkg="ros_vosk" type="trigger.py"    output="screen" />
+    <param name="vosk_model" type="str" value="vosk-model-small-en-us-0.15"/> 
+      
+    <param name="vosk_samplerate" type="int" value="16000"/>
+    <param name="vosk_blocksize" type="int" value="16000"/>
+  <param name="recognition_mode" type="str" value="trigger"/>   <!-- please select "service" or "trigger", but please keep the "trigger" of this launch file -->
+
+    <!-- トリガーとなってほしい単語のリストを、下のdefaultのクォーテーション内に単語ごとに空白をあけて記入 -->
+    <!-- ターミナルから、またはPopenからもトリガーとなってほしい単語を指定できる -->
+    <arg name="trigger_word" default="stop Stop step staff top" />
+    <param name="trigger_word" value="$(arg trigger_word)"/>
+
+</launch>

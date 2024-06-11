@@ -1,7 +1,13 @@
 <launch>
-
   <node name="vosk_engine" pkg="ros_vosk" type="vosk_node.py" respawn="true" output="screen" />
   <!-- <node name="tts_engine" pkg="ros_vosk" type="tts_engine.py" respawn="true" output="screen" /> -->
-  <rosparam file="$(find ros_vosk)/cfg/params.yaml" command="load" ns="" />
-
+  
+  <arg name="lang" default="ja"/>
+  <group if="$(eval lang=='ja')">
+    <rosparam file="$(find ros_vosk)/cfg/params_ja.yaml" command="load" ns="" />
+  </group>
+  <group if="$(eval lang=='en')">
+    <rosparam file="$(find ros_vosk)/cfg/params_en.yaml" command="load" ns="" />
+  </group>
+  <param name="recognition_mode" type="str" value="service"/>   <!-- please select "service" or "trigger", but please keep the "service" of this launch file -->
 </launch>
