@@ -18,7 +18,11 @@ ROS VOSK
       <a href="#introduction">Introduction</a>
     </li>
     <li>
-      <a href="#installation">installation</a>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
     </li>
     <li>
     <a href="#launch">Launch and Usage</a>
@@ -39,53 +43,59 @@ ROS VOSK
 
 A ROS package for speech-to-text services based on [Vosk](https://github.com/alphacep/vosk-api) and [ros_vosk](https://github.com/alphacep/ros-vosk).
 
-## Installation
+<!-- GETTING STARTED -->
+## Getting Started
 
-1. Download this package
+This section describes how to set up this repository.
 
-```bash
-cd ~/catkin_ws/src/
-git clone https://github.com/TeamSOBITS/ros_vosk
-# git clone https://github.com/TeamSOBITS/speech_recognition_vosk
-```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### Prerequisites
 
-2. Install Dependencies
+First, please set up the following environment before proceeding to the next installation stage.
 
-```bash
-cd ros_vosk/
-# cd speech_recognition_vosk/
-bash install.sh
+| System  | Version |
+| ------------- | ------------- |
+| Ubuntu | 20.04 (Focal Fossa) |
+| ROS | Noetic Ninjemys |
+| Python | 3.8 |
 
-# or you can do it manually
-# Install necessary packages from debian
-sudo apt-get update
-sudo apt-get install -y \
-    python3-pip \
-    python3-yaml \
-    espeak
+> [!NOTE]
+> If you need to install `Ubuntu` or `ROS`, please check our [SOBITS Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6).
 
-# Install necessary packages from pip3
-python3 -m pip install \
-    sounddevice \
-    vosk \
-    pyttsx3 \
-    lxml
-# Install "sobits_msgs"
-cd ../
-git clone https://github.com/TeamSOBITS/sobits_msgs.git
-```
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 
-3. Don't forget to run `catkin_make`
-```bash
-cm
+### Installation
 
-# or
-cd ~/catkin_ws/ && catkin_make
-```
+1. Go to the `src` folder of ROS.
+   ```sh
+   $ roscd
+   # Or just use "cd ~/catkin_ws/" and change directory.
+   $ cd src/
+   ```
+2. Clone this repository.
+   ```sh
+   $ git clone https://github.com/TeamSOBITS/ros_vosk
+   ```
+3. Navigate into the repository.
+   ```sh
+   $ cd ros_vosk/
+   ```
+4. Install the dependent packages.
+   ```sh
+   $ bash install.sh
+   ```
+5. Compile the package.
+   ```sh
+   $ roscd
+   # Or just use "cd ~/catkin_ws/" and change directory.
+   $ catkin_make
+   ```
 
 > **Warning**
 > Sometimes the new generated msg might not be recognized and `import error` might appear. In such case, you will need to open a new terminal or restart your container (if you are using Docker).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 ## Launch

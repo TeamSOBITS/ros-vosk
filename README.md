@@ -18,7 +18,11 @@ ROS VOSK
       <a href="#introduction">概要</a>
     </li>
     <li>
-      <a href="#installation">iセットアップ</a>
+      <a href="#環境構築">環境構築</a>
+      <ul>
+        <li><a href="#環境条件">環境条件</a></li>
+        <li><a href="#installation">インストール方法</a></li>
+      </ul>
     </li>
     <li>
     <a href="#launch">Launch</a>
@@ -38,50 +42,60 @@ ROS VOSK
 ## 概要
 これは、[Vosk](https://github.com/alphacep/vosk-api)と[ros_vosk](https://github.com/alphacep/ros-vosk)に基づく音声テキストサービス用のROSパッケージになります。
 
-## Installation
+<!-- セットアップ -->
+## セットアップ
 
-1. このパッケージをダウンロード
+ここで，本レポジトリのセットアップ方法について説明します．
 
-```bash
-cd ~/catkin_ws/src/
-git clone https://github.com/TeamSOBITS/ros_vosk
-# git clone https://github.com/TeamSOBITS/speech_recognition_vosk
-```
-
-2. 依存関係のインストール
-
-```bash
-cd ros_vosk/
-# cd speech_recognition_vosk/
-bash install.sh
-
-# or you can do it manually
-# Install necessary packages from debian
-sudo apt-get update
-sudo apt-get install -y \
-    python3-pip \
-    python3-yaml \
-    espeak
-
-# Install necessary packages from pip3
-python3 -m pip install \
-    sounddevice \
-    vosk \
-    pyttsx3 \
-    lxml
-# Install "sobits_msgs"
-cd ../
-git clone https://github.com/TeamSOBITS/sobits_msgs.git
-```
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 
-3. `catkin_make`を忘れないで！
-```bash
-cm
+### 環境条件
 
-# or
-cd ~/catkin_ws/ && catkin_make
-```
+まず，以下の環境を整えてから，次のインストール段階に進んでください．
+
+| System  | Version |
+| ------------- | ------------- |
+| Ubuntu | 20.04 (Focal Fossa) |
+| ROS | Noetic Ninjemys |
+| Python | 3.8 |
+
+> [!NOTE]
+> `Ubuntu`や`ROS`のインストール方法に関しては，[SOBITS Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)に参照してください．
+
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+
+
+### インストール方法
+
+1. ROSの`src`フォルダに移動します．
+   ```sh
+   $ roscd
+   # もしくは，"cd ~/catkin_ws/"へ移動．
+   $ cd src/
+   ```
+2. 本レポジトリをcloneします．
+   ```sh
+   $ git clone https://github.com/TeamSOBITS/ros_vosk
+   ```
+3. レポジトリの中へ移動します．
+   ```sh
+   $ cd ros_vosk/
+   ```
+4. 依存パッケージをインストールします．
+   ```sh
+   $ bash install.sh
+   ```
+5. パッケージをコンパイルします．
+   ```sh
+   $ roscd
+   # もしくは，"cd ~/catkin_ws/"へ移動．
+   $ catkin_make
+   ```
+
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+
+
 
 > **Warning**
 > 新しい生成された msg が認識されず、`import error` が表示されることがあります。そのような場合は、新しいターミナルを開くか、コンテナを再起動する必要があります（Dockerを使用している場合）
