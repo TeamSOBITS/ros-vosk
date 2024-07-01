@@ -40,7 +40,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES speech_recognition_vosk
-CATKIN_DEPENDS rospy std_msgs message_runtime
+CATKIN_DEPENDS rospy std_msgs
 
 )
 
