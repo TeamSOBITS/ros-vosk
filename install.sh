@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-echo "╔══╣ Install: VOSK for ROS (STARTING) ╠══╗"
+echo "╔══╣ Install: Speech Recognition Vosk for ROS (STARTING) ╠══╗"
 
 # Install necessary packages from debian
 sudo apt-get update
@@ -23,8 +23,8 @@ python3 -m pip install \
     playsound
 
 # Install "sobits_msgs"
-cd ../
+cd ~/catkin_ws/src/
 git clone https://github.com/TeamSOBITS/sobits_msgs.git
+cd ~/catkin_ws/src/speech_recognition_vosk/
 
-
-echo "╚══╣ Install: VOSK for ROS (FINISHED) ╠══╝"
+echo "╚══╣ Install: Speech Recognition Vosk for ROS (FINISHED) ╠══╝"
