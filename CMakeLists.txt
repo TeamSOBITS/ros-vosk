@@ -10,7 +10,6 @@ add_compile_options(-std=c++14)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
-  message_generation
 )
 
 
@@ -19,16 +18,15 @@ find_package(catkin REQUIRED COMPONENTS
 ################################################
 
 ##Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  speech_recognition.msg
-)
+# add_message_files(
+#   FILES
+# )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-   DEPENDENCIES
-   std_msgs
-)
+# generate_messages(
+#    DEPENDENCIES
+#    std_msgs
+# )
 
 ###################################
 ## catkin specific configuration ##
