@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(ros_vosk)
+project(speech_recognition_vosk)
 
 ## Compile as C++14, supported in ROS Noetic and newer
 add_compile_options(-std=c++14)
@@ -41,7 +41,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ros_vosk
+#  LIBRARIES speech_recognition_vosk
 CATKIN_DEPENDS rospy std_msgs message_runtime
 
 )

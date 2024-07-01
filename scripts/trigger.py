@@ -12,8 +12,8 @@ class TopicSubscriber():
 
     def __init__(self):
         
-        self.sub_msg = rospy.Subscriber('/speech_recognition/final_result', String, self.callback_message )
-        self.pub = rospy.Publisher("/voice_trigger/start_flag", Bool, queue_size=1)
+        self.sub_msg = rospy.Subscriber('/speech_recognition/result', String, self.callback_message )
+        self.pub = rospy.Publisher("/speech_recognition/trigger_flag", Bool, queue_size=1)
         self.trigger = False
         r = rospy.Rate(10)
         while not rospy.is_shutdown():

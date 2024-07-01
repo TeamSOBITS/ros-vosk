@@ -29,8 +29,9 @@ from playsound import playsound
 
 import rospy
 import rospkg
-from sobits_msgs.srv import Speech_Recognition
-from ros_vosk.msg import speech_recognition
+# from speech_recognition_vosk.msg import Speech_recognition
+from sobits_msgs.srv import SpeechRecognition
+from sobits_msgs.srv import SpeechRecognitionResponse
 from std_msgs.msg import String, Bool
 
 import vosk_ros_model_downloader as downloader
@@ -39,9 +40,11 @@ class vosk_sr():
     def __init__(self):
         model_name = rospy.get_param('vosk/model', "vosk-model-small-en-us-0.15")
 
+        self.mode = rospy.get_param("/recognition_mode", "service")
+
         rospack = rospkg.RosPack()
         rospack.list()
-        self.package_path = rospack.get_path('ros_vosk')
+        self.package_path = rospack.get_path('speech_recognition_vosk')
         
         models_dir = os.path.join(self.package_path, 'models')
         model_path = os.path.join(models_dir, model_name)
@@ -66,16 +69,11 @@ class vosk_sr():
         self.tts_status = False
 
         # ROS node initialization
-        
-        # self.pub_vosk = rospy.Publisher('speech_recognition/vosk_result',speech_recognition, queue_size=10)
-        self.pub_final = rospy.Publisher('speech_recognition/final_result',String, queue_size=10)
-        # self.pub_partial = rospy.Publisher('speech_recognition/partial_result',String, queue_size=10)
 
         self.rate = rospy.Rate(100)
 
         rospy.on_shutdown(self.cleanup)
 
-        # self.msg = speech_recognition()
         self.final_result = ""
         self.q = queue.Queue()
 
@@ -88,13 +86,11 @@ class vosk_sr():
         # soundfile expects an int, sounddevice provides a float:
         
         # self.samplerate = int(device_info['default_samplerate'])
-        self.samplerate = rospy.get_param("/vosk_samplerate", 16000)
-        self.blocksize = rospy.get_param("/vosk_blocksize", 16000)
+        self.samplerate = rospy.get_param("/vosk/sample_rate", 16000)
+        self.blocksize = rospy.get_param("/vosk/blocksize", 16000)
         # rospy.set_param('vosk/sample_rate', self.samplerate)
 
         self.model = vosk.Model(model_path)
-
-        self.mode = rospy.get_param("/recognition_mode", "service")
 
         #TODO GPUInit automatically selects a CUDA device and allows multithreading.
         # gpu = vosk.GpuInit() #TODO
@@ -116,13 +112,11 @@ class vosk_sr():
         rospy.Subscriber('/tts/status', Bool, self.tts_get_status)
 
     def speech_recognize(self, srv):
-        # rospy.loginfo("start service")
-        self.final_result = "" 
+        self.final_result = ""
         try:
-            with sd.RawInputStream(samplerate=self.samplerate, blocksize=16000, device=self.input_dev_num, dtype='int16',
-                               channels=1, callback=self.stream_callback):
-                # rospy.logdebug('Started recording')
-                
+            with sd.RawInputStream(samplerate=self.samplerate, blocksize=self.blocksize, device=self.input_dev_num, dtype='int16',
+                                channels=1, callback=self.stream_callback):
+
                 if (self.mode == "service"):
                     playsound(os.path.join(self.package_path, 'mp3', 'start_sound.mp3'))
                     rospy.loginfo('Service Started')
@@ -130,14 +124,13 @@ class vosk_sr():
                     rospy.loginfo('Voice Trigger Started')
 
                 rec = vosk.KaldiRecognizer(self.model, self.samplerate)
-                print("Vosk is ready to listen!")
                 isRecognized = False
                 isRecognized_partially = False
-                
+
                 current_time = time.time()
                 start_time   = current_time
                 ts = []
-            
+
                 while not rospy.is_shutdown():
                     self.tts_status_listenner()
 
@@ -150,7 +143,6 @@ class vosk_sr():
                     elif self.tts_status == False:
                         data = self.q.get()
                         if rec.AcceptWaveform(data):
-
                             # In case of final result
                             result = rec.FinalResult()
 
@@ -159,7 +151,6 @@ class vosk_sr():
 
                             if lentext > 2:
                                 result_text = diction["text"]
-                                # rospy.loginfo(result_text)
                                 isRecognized = True
                             else:
                                 isRecognized = False
@@ -175,16 +166,14 @@ class vosk_sr():
                                 partial = partial_dict["partial"]
 
                         if (isRecognized is True):
-
                             # self.msg.isSpeech_recognized = True
                             # self.msg.time_recognized = rospy.Time.now()
                             self.final_result = result_text
                             self.partial_result = "unk"
-                            # self.pub_vosk.publish(self.msg)
                             rospy.sleep(0.1)
-                            self.pub_final.publish(result_text)
+                            if (self.mode == "trigger"):
+                                self.pub_final.publish(result_text)
                             isRecognized = False
-
 
                         elif (isRecognized_partially is True):
                             if partial != "unk":
@@ -192,9 +181,7 @@ class vosk_sr():
                                 # self.msg.time_recognized = rospy.Time.now()
                                 self.final_result = "unk"
                                 self.partial_result = partial
-                                # self.pub_vosk.publish(self.msg)
                                 rospy.sleep(0.1)
-                                # self.pub_partial.publish(partial)
                                 partial = "unk"
                                 isRecognized_partially = False
                                 if (self.mode == "service"):
@@ -213,8 +200,8 @@ class vosk_sr():
 
                     playsound(os.path.join(self.package_path, 'mp3', 'end_sound.mp3'))
 
-                    return Speech_Recognition(transcript=ts)
-                                
+                    return SpeechRecognitionResponse(transcript=ts)
+
         except Exception as e:
             exit(type(e).__name__ + ': ' + str(e))
         except KeyboardInterrupt:
@@ -225,11 +212,12 @@ class vosk_sr():
     def wait_server(self):
         if (self.mode == "service"):
             rospy.loginfo("Waiting for service...")
-            rospy.Service('/speech_recognition', Speech_Recognition, self.speech_recognize)
+            rospy.Service('/speech_recognition', SpeechRecognition, self.speech_recognize)
         elif (self.mode == "trigger"):
-            srv = Speech_Recognition()
+            self.pub_final = rospy.Publisher('speech_recognition/result',String, queue_size=10)
+            srv = SpeechRecognition()
             srv.timeout_sec = float("inf")
-            rec.speech_recognize(srv)
+            self.speech_recognize(srv)
         else:
             rospy.logfatal("Error of the mode selsect")
 

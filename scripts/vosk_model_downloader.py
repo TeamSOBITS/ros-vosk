@@ -21,7 +21,7 @@ class model_downloader():
     def __init__(self):
         rospack = rospkg.RosPack()
         rospack.list()
-        self.package_path = rospack.get_path('ros_vosk')
+        self.package_path = rospack.get_path('speech_recognition_vosk')
         model_path = '/models/'
         self.model_dir = self.package_path + model_path
 

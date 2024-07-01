@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ros_vosk</name>
+  <name>speech_recognition_vosk</name>
   <version>2.1.21</version>
   <description>ROS wrapper for Vosk</description>
   <url type="website">https://pypi.python.org/pypi/vosk/</url>
