@@ -34,7 +34,7 @@ from sobits_msgs.srv import SpeechRecognition
 from sobits_msgs.srv import SpeechRecognitionResponse
 from std_msgs.msg import String, Bool
 
-import vosk_ros_model_downloader as downloader
+import vosk_model_downloader as downloader
 
 class vosk_sr():
     def __init__(self):
