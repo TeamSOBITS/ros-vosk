@@ -7,7 +7,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'lang',
-            default_value='ja',
+            default_value='en',
             description='Language setting for the VOSK recognizer'
         ),
         DeclareLaunchArgument(

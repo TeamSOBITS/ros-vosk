@@ -8,7 +8,7 @@ setup(
     name=package_name,
     version='0.0.0',
     packages=find_packages(exclude=['test']),
-    data_files=[ (os.path.join('share', package_name), glob('launch/speech_recognition_vosk.launch.py')),
+    data_files=[ (os.path.join('share', package_name), glob('launch/*.py')),
     ],
     install_requires=['setuptools', 'vosk-model-downloader'],
     zip_safe=True,

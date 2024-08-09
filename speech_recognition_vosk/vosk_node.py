@@ -25,6 +25,8 @@ import vosk
 import sounddevice as sd
 from mmap import MAP_SHARED
 from playsound import playsound
+import getpass
+
 
 import rclpy
 from rclpy.node import Node
@@ -48,7 +50,7 @@ class VoskSR(Node):
         model_name = self.get_parameter('vosk.model').get_parameter_value().string_value
         self.mode = self.get_parameter('recognition_mode').get_parameter_value().string_value
 
-        self.package_path = get_package_share_directory('speech_recognition_vosk')
+        self.package_path = "/home/" + str(getpass.getuser()) + "/colcon_ws/src/speech_recognition_vosk"
         
         models_dir = os.path.join(self.package_path, 'models')
         model_path = os.path.join(models_dir, model_name)
