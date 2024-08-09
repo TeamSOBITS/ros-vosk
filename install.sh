@@ -20,11 +20,12 @@ python3 -m pip install \
     pyaudio \
     beautifulsoup4 \
     lxml \
+    alsamixer\
     playsound
 
 # Install "sobits_msgs"
-cd ~/catkin_ws/src/
-git clone https://github.com/TeamSOBITS/sobits_msgs.git
-cd ~/catkin_ws/src/speech_recognition_vosk/
+# cd ~/colcon_ws/src/
+# git clone https://github.com/TeamSOBITS/sobits_msgs.git
+# cd ~/colcon_ws/src/speech_recognition_vosk/
 
 echo "╚══╣ Install: Speech Recognition Vosk for ROS (FINISHED) ╠══╝"

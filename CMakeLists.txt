@@ -1,56 +1,40 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(speech_recognition_vosk)
+cmake_minimum_required(VERSION 3.8)
+project(speech_recognitnion_vosk)
 
-## Compile as C++14, supported in ROS Noetic and newer
-add_compile_options(-std=c++14)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+ set(CAMAKE_CXX_STANDARD 14)
+endif()
+ 
+# Find dependencies
+find_package(std_msgs REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(sobits_msgs REQUIRED)
+find_package(ament_index_pythono REQUIRED)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  rospy
-  std_msgs
-)
-
-
-################################################
-## Declare ROS messages, services and actions ##
-################################################
-
-##Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-# )
-
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#    DEPENDENCIES
-#    std_msgs
-# )
-
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if your package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES speech_recognition_vosk
-CATKIN_DEPENDS rospy std_msgs
-
-)
-
-###########
-## Build ##
-###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
+# Include directories
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+  ${rclpy_INCLUDE_DIRS}
+  ${sobits_msgs_INCLUDE_DIRS}
 )
+
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME})
+
+# Install scripts
+install(PROGRAMS
+  scripts/trigger.py
+  scripts/vosk_model_downloader.py
+  scripts/vosk_node.py
+  scripts/vosk_server.py
+  scripts/tts_engine.py
+  DESTINATION lib/${PROJECT_NAME}
+ )
+ 
+ # Package
+ ament_package()
+  
+ 
+  
+  
