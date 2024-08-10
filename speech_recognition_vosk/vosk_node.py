@@ -30,7 +30,6 @@ import getpass
 
 import rclpy
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory
 
 # from speech_recognition_vosk.msg import Speech_recognition
 from sobits_msgs.srv import SpeechRecognition
@@ -196,7 +195,7 @@ class VoskSR(Node):
         elif self.mode == "trigger":
             self.pub_final = self.create_publisher(String, 'speech_recognition/result', 10)
             srv = SpeechRecognition.Request()
-            srv.timeout_sec = float("inf")
+            srv.timeout_sec = 1000
             self.speech_recognize(srv, SpeechRecognition.Response())
         else:
             self.get_logger().fatal("Error of the mode select")

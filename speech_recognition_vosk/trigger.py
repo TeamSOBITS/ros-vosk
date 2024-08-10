@@ -39,9 +39,9 @@ class TopicSubscriber(Node):
 
         en_msg = s_msg.encode()
         de_msg = en_msg.decode("unicode-escape")
-        listen_word = re.findall('"(.*?)"', de_msg)
+        listen_word = de_msg.split()
 
-        word_list = self.get_parameter("trigger_word").get_parameter_value().string_value.split()
+        word_list = ["stop"]
 
         self.get_logger().info("======================================================")
         self.get_logger().info("---------------------voice_word-----------------------")
@@ -52,11 +52,9 @@ class TopicSubscriber(Node):
         self.get_logger().info("------------------------------------------------------")
         self.get_logger().info("======================================================")
 
-        and_list = set(word_list) & set(listen_word)
+        # and_list = set(word_list) & set(listen_word)
         word = set(word_list)
-        listen1 = "".join(listen_word)
-        listen2 = listen1.split() 
-        listen = set(listen2)
+        listen = set(listen_word)
 
         if word & listen:
             self.get_logger().info("listener_wordが検出されたのでvoskを終了します")
