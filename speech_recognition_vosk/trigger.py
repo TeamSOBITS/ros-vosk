@@ -12,6 +12,13 @@ class TopicSubscriber(Node):
     def __init__(self):
         super().__init__('voice_trigger')
 
+        # Declare the trigger_word parameter
+        self.declare_parameter('trigger_word', 'stop')
+
+        # Get the parameter value
+        self.trigger_word = self.get_parameter('trigger_word').get_parameter_value().string_value
+        self.word_list = self.trigger_word.split()
+
         self.sub_msg = self.create_subscription(String, '/speech_recognition/result', self.callback_message, 10)
         self.pub = self.create_publisher(Bool, '/speech_recognition/trigger_flag', 10)
         self.trigger = False
@@ -41,7 +48,7 @@ class TopicSubscriber(Node):
         de_msg = en_msg.decode("unicode-escape")
         listen_word = de_msg.split()
 
-        word_list = ["stop"]
+        word_list = self.word_list
 
         self.get_logger().info("======================================================")
         self.get_logger().info("---------------------voice_word-----------------------")
