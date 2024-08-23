@@ -36,8 +36,8 @@ class TopicSubscriber(Node):
                 current_time = self.get_clock().now().seconds_nanoseconds()[0]
                 if (current_time - self.last_time_s) > 3:
                     self.pub.publish(Bool(data=self.trigger))
-                    Popen(['ros2', 'node', 'kill', '/vosk_engine'])
-                    Popen(['ros2', 'node', 'kill', '/tts_engine'])
+                    Popen(['pkill',  '-f',  'vosk_node'])
+                    Popen(['pkill',  '-f',  'trigger'])
                     self.destroy_node()
                     rclpy.shutdown()
 
