@@ -3,29 +3,31 @@
 
 echo "╔══╣ Install: Speech Recognition Vosk for ROS (STARTING) ╠══╗"
 
-# Install necessary packages from debian
+
+# Keep the current directory
+CURRENT_DIR=$(pwd)
+
+# Install necessary packages
 sudo apt-get update
 sudo apt-get install -y \
-    python3-pip \
-    python3-yaml \
-    portaudio19-dev \
-    espeak
+    ros-${ROS_DISTRO}-std-msgs
 
+sudo apt-get install -y \
+    python3-tk
 
 # Install necessary packages from pip3
+python3 -m pip install -U pip
 python3 -m pip install \
-    sounddevice \
-    vosk \
-    pyttsx3 \
-    pyaudio \
     beautifulsoup4 \
-    lxml \
-    alsamixer\
-    playsound
+    soundfile \
+    playsound \
+    vosk
 
 # Install "sobits_msgs"
-# cd ~/colcon_ws/src/
-# git clone https://github.com/TeamSOBITS/sobits_msgs.git
-# cd ~/colcon_ws/src/speech_recognition_vosk/
+cd ..
+git clone -b feature/humble-devel https://github.com/TeamSOBITS/sobits_msgs.git
+
+cd $CURRENT_DIR
+
 
 echo "╚══╣ Install: Speech Recognition Vosk for ROS (FINISHED) ╠══╝"
