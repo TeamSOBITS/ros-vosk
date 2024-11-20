@@ -10,13 +10,13 @@ endif()
 find_package(std_msgs REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclpy REQUIRED)
-find_package(sobits_msgs REQUIRED)
+find_package(sobits_interfaces REQUIRED)
 find_package(ament_index_pythono REQUIRED)
 
 # Include directories
 include_directories(
   ${rclpy_INCLUDE_DIRS}
-  ${sobits_msgs_INCLUDE_DIRS}
+  ${sobits_interfaces_INCLUDE_DIRS}
 )
 
 # Install Python modules

@@ -32,7 +32,7 @@ import rclpy
 from rclpy.node import Node
 
 # from speech_recognition_vosk.msg import Speech_recognition
-from sobits_msgs.srv import SpeechRecognition
+from sobits_interfaces.srv import SpeechRecognition
 from std_msgs.msg import String, Bool
 
 from . import vosk_model_downloader as downloader
