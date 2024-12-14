@@ -30,9 +30,13 @@ import getpass
 
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionServer, CancelResponse, GoalResponse
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.executors import ExternalShutdownException
+from rclpy.executors import MultiThreadedExecutor
 
 # from speech_recognition_vosk.msg import Speech_recognition
-from sobits_msgs.srv import SpeechRecognition
+from sobits_interfaces.action import SpeechRecognition
 from std_msgs.msg import String, Bool
 
 from . import vosk_model_downloader as downloader
@@ -42,12 +46,10 @@ class VoskSR(Node):
         super().__init__('vosk_sr')
 
         self.declare_parameter('vosk.model', "vosk-model-small-en-us-0.15")
-        self.declare_parameter('recognition_mode', "service")
         self.declare_parameter('vosk.sample_rate', 44100)
         self.declare_parameter('vosk.blocksize', 16000)
 
         model_name = self.get_parameter('vosk.model').get_parameter_value().string_value
-        self.mode = self.get_parameter('recognition_mode').get_parameter_value().string_value
 
         self.package_path = "/home/" + str(getpass.getuser()) + "/colcon_ws/src/speech_recognition_vosk"
         
@@ -90,11 +92,17 @@ class VoskSR(Node):
 
         self.model = vosk.Model(model_path)
         
-        self.create_subscription(Bool, '/tts/status', self.tts_get_status, 10)
 
-    def cleanup(self):
-        self.get_logger().warn("Shutting down VOSK speech recognition node...")
-    
+        self.get_logger().info("Waiting for service...")
+        self.server = ActionServer(
+            self,
+            SpeechRecognition,
+            "speech_recognition",
+            execute_callback=self.speech_recognize,
+            callback_group=ReentrantCallbackGroup(),
+            goal_callback=self.goal_callback,
+            cancel_callback=self.cancel_callback)
+
     def stream_callback(self, indata, frames, time, status):
         if status:
             print(status, file=sys.stderr)
@@ -103,16 +111,27 @@ class VoskSR(Node):
     def tts_get_status(self, msg):
         self.tts_status = msg.data
 
-    def speech_recognize(self, request, response):
+    def goal_callback(self, goal_request):
+        """Accept or reject a client request to begin an action."""
+        # This server allows multiple goals in parallel
+        self.get_logger().info('Received goal request')
+        return GoalResponse.ACCEPT
+
+    def cancel_callback(self, goal_handle):
+        """Accept or reject a client request to cancel an action."""
+        self.get_logger().info('Received cancel request')
+        return CancelResponse.ACCEPT
+        
+    async def speech_recognize(self, goal_handle):
+        feedback = SpeechRecognition.Feedback()
+        response = SpeechRecognition.Result()
+
         self.final_result = ""
         try:
             with sd.RawInputStream(samplerate=self.samplerate, blocksize=self.blocksize, device=self.input_dev_num, dtype='int16', channels=1, callback=self.stream_callback):
 
-                if self.mode == "service":
-                    playsound(os.path.join(self.package_path, 'mp3', 'start_sound.mp3'))
-                    self.get_logger().info('Service Started')
-                else:
-                    self.get_logger().info('Voice Trigger Started')
+                playsound(os.path.join(self.package_path, 'mp3', 'start_sound.mp3'))
+                self.get_logger().info('Service Started')
 
                 rec = vosk.KaldiRecognizer(self.model, self.samplerate)
                 isRecognized = False
@@ -121,8 +140,12 @@ class VoskSR(Node):
                 current_time = time.time()
                 start_time = current_time
                 ts = []
-
                 while rclpy.ok():
+                    if goal_handle.is_cancel_requested:
+                        goal_handle.canceled()
+                        self.get_logger().info('Goal canceled')
+                        response.is_cancel = True
+                        return response
                     if self.tts_status:
                         with self.q.mutex:
                             self.q.queue.clear()
@@ -133,7 +156,6 @@ class VoskSR(Node):
                             result = rec.FinalResult()
                             diction = json.loads(result)
                             lentext = len(diction["text"])
-
                             if lentext > 2:
                                 result_text = diction["text"]
                                 isRecognized = True
@@ -146,15 +168,13 @@ class VoskSR(Node):
                                 isRecognized_partially = True
                                 partial_dict = json.loads(result_partial)
                                 partial = partial_dict["partial"]
-
                         if isRecognized:
                             self.final_result = result_text
                             self.partial_result = "unk"
                             time.sleep(0.1)
-                            if self.mode == "trigger":
-                                self.pub_final.publish(String(data=result_text))
                             isRecognized = False
-
+                            if self.final_result and self.final_result != "unk":
+                                ts.append(self.final_result)
                         elif isRecognized_partially:
                             if partial != "unk":
                                 self.final_result = "unk"
@@ -162,24 +182,24 @@ class VoskSR(Node):
                                 time.sleep(0.1)
                                 partial = "unk"
                                 isRecognized_partially = False
-                                if self.mode == "service":
-                                    if self.partial_result and self.partial_result != "unk":
-                                        ts.append(self.partial_result)
+                                if self.partial_result and self.partial_result != "unk":
+                                    ts.append(self.partial_result)
+                    current_time = time.time()
+                    if current_time - start_time > goal_handle.request.timeout_sec:
+                        break
+                    if len(ts) > 0:
+                        feedback.wip_result.append(ts[-1])
+                    else:
+                        feedback.wip_result = []    
+                    # self.get_logger().info('Publishing feedback: {}'.format(feedback.wip_result))
+                    goal_handle.publish_feedback(feedback)
+                self.get_logger().info(str(ts))
 
-                    if self.mode == "service":
-                        current_time = time.time()
-                        if current_time - start_time > request.timeout_sec:
-                            break
-
-                if self.mode == "service":
-                    if self.final_result and self.final_result != "unk":
-                        ts.append(self.final_result)
-                    self.get_logger().info(str(ts))
-
-                    playsound(os.path.join(self.package_path, 'mp3', 'end_sound.mp3'))
-
-                    response.transcript = ts
-                    return response
+                playsound(os.path.join(self.package_path, 'mp3', 'end_sound.mp3'))
+                goal_handle.succeed()
+                response.transcript = str(ts[-1])
+                response.is_cancel = False
+                return response
 
         except Exception as e:
             exit(type(e).__name__ + ': ' + str(e))
@@ -188,26 +208,19 @@ class VoskSR(Node):
             time.sleep(1)
             print("node terminated")
 
-    def wait_server(self):
-        if self.mode == "service":
-            self.get_logger().info("Waiting for service...")
-            self.create_service(SpeechRecognition, '/speech_recognition', self.speech_recognize)
-        elif self.mode == "trigger":
-            self.pub_final = self.create_publisher(String, 'speech_recognition/result', 10)
-            srv = SpeechRecognition.Request()
-            srv.timeout_sec = 1000
-            self.speech_recognize(srv, SpeechRecognition.Response())
-        else:
-            self.get_logger().fatal("Error of the mode select")
+
 
 def main(args=None):
-    rclpy.init(args=args)
-    rec = VoskSR()
-    rec.wait_server()
-    rclpy.spin(rec)
+    try:
+        rclpy.init(args=args)
 
-    rec.cleanup()
-    rclpy.shutdown()
+        rec = VoskSR()
 
+        # Use a MultiThreadedExecutor to enable processing goals concurrently
+        executor = MultiThreadedExecutor()
+
+        rclpy.spin(rec, executor=executor)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
 if __name__ == '__main__':
     main()
