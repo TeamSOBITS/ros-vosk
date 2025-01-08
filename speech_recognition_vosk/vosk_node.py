@@ -12,9 +12,6 @@
 # This is a node that integrates VOSK with ROS and supports a TTS engine to be used along with it
 # When the TTS engine is speaking some words, the recognizer will stop listening to the audio stream so it won't listen to itself :)
 
-# It publishes to the topic speech_recognition/vosk_result a custom "speech_recognition" message
-# It publishes to the topic speech_recognition/final_result a simple string
-# It publishes to the topic speech_recognition/partial_result a simple string
 
 import os
 import sys
@@ -39,45 +36,28 @@ from rclpy.executors import MultiThreadedExecutor
 from sobits_interfaces.action import SpeechRecognition
 from std_msgs.msg import String, Bool
 
-from . import vosk_model_downloader as downloader
+from ament_index_python.packages import get_package_share_directory
+
+# from . import model_downloader as downloader
 
 class VoskSR(Node):
     def __init__(self):
-        super().__init__('vosk_sr')
+        super().__init__('vosk_node')
 
-        self.declare_parameter('vosk.model', "vosk-model-small-en-us-0.15")
-        self.declare_parameter('vosk.sample_rate', 44100)
-        self.declare_parameter('vosk.blocksize', 16000)
+        self.declare_parameter('model', "vosk-model-small-en-us-0.15")
+        self.declare_parameter('sample_rate', 44100)
+        self.declare_parameter('blocksize', 16000)
 
-        model_name = self.get_parameter('vosk.model').get_parameter_value().string_value
+        self.model_path = self.get_parameter('model').get_parameter_value().string_value
+        self.samplerate = self.get_parameter('sample_rate').get_parameter_value().integer_value
+        self.blocksize = self.get_parameter('blocksize').get_parameter_value().integer_value
 
-        self.package_path = "/home/" + str(getpass.getuser()) + "/colcon_ws/src/speech_recognition_vosk"
-        
-        models_dir = os.path.join(self.package_path, 'models')
-        model_path = os.path.join(models_dir, model_name)
-        
-        if not os.path.exists(model_path):
-            model_downloader = downloader.ModelDownloader()
-            model_link, _ = model_downloader.get_model_link(model_name)
+        self.sound_folder_path = os.path.join(get_package_share_directory('sobits_interfaces'), 'mp3')
 
-            if model_link is None:
-                print(f"model '{model_name}' not found in '{models_dir}'! Please use the GUI to download it or configure an available model...")
-                model_downloader.execute()
-            else:
-                print(f"model '{model_name}' not found in '{models_dir}'! Downloading model...")
-                model_downloader.download(model_name)
-                
-            model_name = model_downloader.model_to_download
-        
-        self.get_parameter('vosk.model').get_parameter_value().string_value
+        if not os.path.exists(self.model_path):
+            self.get_logger().fatal("\033[31m[NOT MODEL] " + str(self.model_path) + "\033[0m")
+            return
 
-        self.tts_status = False
-
-        # ROS node initialization
-
-        self.rate = self.create_rate(100)
-
-        self.final_result = ""
         self.q = queue.Queue()
 
         self.input_dev_num = sd.query_hostapis()[0]['default_input_device']
@@ -87,10 +67,8 @@ class VoskSR(Node):
 
         device_info = sd.query_devices(self.input_dev_num, 'input')
         
-        self.samplerate = self.get_parameter('vosk.sample_rate').get_parameter_value().integer_value
-        self.blocksize = self.get_parameter('vosk.blocksize').get_parameter_value().integer_value
 
-        self.model = vosk.Model(model_path)
+        self.model = vosk.Model(self.model_path)
         
 
         self.get_logger().info("Waiting for service...")
@@ -107,9 +85,6 @@ class VoskSR(Node):
         if status:
             print(status, file=sys.stderr)
         self.q.put(bytes(indata))
-        
-    def tts_get_status(self, msg):
-        self.tts_status = msg.data
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
@@ -126,79 +101,85 @@ class VoskSR(Node):
         feedback = SpeechRecognition.Feedback()
         response = SpeechRecognition.Result()
 
-        self.final_result = ""
         try:
             with sd.RawInputStream(samplerate=self.samplerate, blocksize=self.blocksize, device=self.input_dev_num, dtype='int16', channels=1, callback=self.stream_callback):
 
-                playsound(os.path.join(self.package_path, 'mp3', 'start_sound.mp3'))
-                self.get_logger().info('Service Started')
+                if (not goal_handle.request.silent_mode):
+                    playsound(os.path.join(self.sound_folder_path, 'start_sound.mp3'))
+                self.get_logger().info('Server Start')
 
                 rec = vosk.KaldiRecognizer(self.model, self.samplerate)
-                isRecognized = False
-                isRecognized_partially = False
 
-                current_time = time.time()
-                start_time = current_time
-                ts = []
+                last_wip_text_to_feedback = ""
+                feedback.addition_text = ""
+                response.result_text = ""
+
+                start_time = time.time()
+                last_feedback_time = time.time()
                 while rclpy.ok():
+
+                    partial = None
+                    result_text = None
+                    isRecognized = False
+                    isRecognized_partially = False
+
                     if goal_handle.is_cancel_requested:
-                        goal_handle.canceled()
                         self.get_logger().info('Goal canceled')
-                        response.is_cancel = True
+                        self.get_logger().info('Wip Result : ' + response.result_text)
+                        goal_handle.canceled()
                         return response
-                    if self.tts_status:
-                        with self.q.mutex:
-                            self.q.queue.clear()
+
+                    data = self.q.get()
+                    if rec.AcceptWaveform(data):
+
+                        result = rec.FinalResult()
+                        diction = json.loads(result)
+                        lentext = len(diction["text"])
+
+                        if lentext > 0:
+                            result_text = diction["text"]
+                            isRecognized = True
+
                         rec.Reset()
                     else:
-                        data = self.q.get()
-                        if rec.AcceptWaveform(data):
-                            result = rec.FinalResult()
-                            diction = json.loads(result)
-                            lentext = len(diction["text"])
-                            if lentext > 2:
-                                result_text = diction["text"]
-                                isRecognized = True
-                            else:
-                                isRecognized = False
-                            rec.Reset()
-                        else:
-                            result_partial = rec.PartialResult()
-                            if len(result_partial) > 20:
-                                isRecognized_partially = True
-                                partial_dict = json.loads(result_partial)
-                                partial = partial_dict["partial"]
-                        if isRecognized:
-                            self.final_result = result_text
-                            self.partial_result = "unk"
-                            time.sleep(0.1)
-                            isRecognized = False
-                            if self.final_result and self.final_result != "unk":
-                                ts.append(self.final_result)
-                        elif isRecognized_partially:
-                            if partial != "unk":
-                                self.final_result = "unk"
-                                self.partial_result = partial
-                                time.sleep(0.1)
-                                partial = "unk"
-                                isRecognized_partially = False
-                                if self.partial_result and self.partial_result != "unk":
-                                    ts.append(self.partial_result)
-                    current_time = time.time()
-                    if current_time - start_time > goal_handle.request.timeout_sec:
-                        break
-                    if len(ts) > 0:
-                        feedback.wip_result.append(ts[-1])
-                    else:
-                        feedback.wip_result = []    
-                    # self.get_logger().info('Publishing feedback: {}'.format(feedback.wip_result))
-                    goal_handle.publish_feedback(feedback)
-                self.get_logger().info(str(ts))
 
-                playsound(os.path.join(self.package_path, 'mp3', 'end_sound.mp3'))
+                        result_partial = rec.PartialResult()
+                        if len(result_partial) > 20:  # there is partial
+
+                            isRecognized_partially = True
+                            partial_dict = json.loads(result_partial)
+                            partial = partial_dict["partial"]
+
+
+                    if (isRecognized or (isRecognized_partially and partial)): time.sleep(0.1)
+
+                    if (result_text):
+                        if (len(response.result_text) != 0):
+                            response.result_text += " "
+                        response.result_text += result_text
+
+                    if ((time.time() - last_feedback_time) > (1.0/float(goal_handle.request.feedback_rate))):
+                        if (partial):
+                            wip_result = response.result_text + partial
+                        else:
+                            wip_result = response.result_text
+
+                        feedback.addition_text = wip_result[len(last_wip_text_to_feedback):]
+                        goal_handle.publish_feedback(feedback)
+
+                        last_wip_text_to_feedback = response.result_text
+                        last_feedback_time = time.time()
+
+                    if ((time.time() - start_time) > goal_handle.request.timeout_sec):
+                        if (partial):
+                            response.result_text += partial
+                        self.get_logger().info("Result : " + response.result_text)
+                        break
+
+                if (not goal_handle.request.silent_mode):
+                    playsound(os.path.join(self.sound_folder_path, 'end_sound.mp3'))
+
                 goal_handle.succeed()
-                response.transcript = str(ts[-1])
-                response.is_cancel = False
                 return response
 
         except Exception as e:

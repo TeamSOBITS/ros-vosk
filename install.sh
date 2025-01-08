@@ -21,7 +21,8 @@ python3 -m pip install \
     beautifulsoup4 \
     soundfile \
     playsound \
-    vosk
+    vosk \
+    sounddevice
 
 # Install "sobits_msgs"
 cd ..
